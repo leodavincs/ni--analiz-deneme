@@ -343,9 +343,12 @@ def collect_status():
 
 
 # ---- Pro erken erişim e-posta toplama -----------------------------------
-# Pro henüz geliştiriliyor; ilgilenen kullanıcının e-postasını bir JSONL
-# dosyasına ekler (DB salt-okunur). Tek satır = bir kayıt; tekrar engellenir.
+# Pro henüz geliştiriliyor; ilgilenen kullanıcının e-postasını toplar.
+#   • Üretim (Render): WEB3FORMS_KEY env'i varsa Web3Forms ile operatörün
+#     Gmail'ine ANINDA iletir — Render diski geçici olduğu için dosyaya GÜVENİLMEZ.
+#   • Yerel/anahtarsız: eski davranış — JSONL dosyasına ekler (tekrarı engeller).
 EARLY_ACCESS_PATH = ROOT / "data" / "early_access.jsonl"
+WEB3FORMS_URL = "https://api.web3forms.com/submit"
 _EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 _ea_lock = threading.Lock()
 
@@ -356,6 +359,25 @@ def early_access():
     email = str(body.get("email", "")).strip().lower()
     if not _EMAIL_RE.match(email):
         return jsonify({"ok": False, "error": "geçersiz e-posta"}), 400
+
+    key = os.environ.get("WEB3FORMS_KEY", "").strip()
+    if key:
+        try:
+            import requests
+            r = requests.post(WEB3FORMS_URL, json={
+                "access_key": key,
+                "subject": "Niş Avcısı — yeni Pro erken erişim kaydı 🎯",
+                "from_name": "Niş Avcısı paneli",
+                "email": email,        # ziyaretçinin adresi → yanıtla'da çıkar
+                "message": f"Pro erken erişim isteyen: {email}",
+            }, timeout=10)
+            if not (r.ok and r.json().get("success")):
+                return jsonify({"ok": False, "error": "gönderilemedi"}), 502
+        except Exception:
+            return jsonify({"ok": False, "error": "gönderilemedi"}), 502
+        return jsonify({"ok": True})
+
+    # Anahtar yoksa (yerel geliştirme): dosyaya yaz.
     with _ea_lock:
         # zaten kayıtlıysa idempotent davran
         existing = set()
