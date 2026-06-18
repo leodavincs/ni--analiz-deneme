@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Niş Avcısı — HAFTALIK launchd zamanlaması (her Pazartesi 09:00).
+  Reddit (paralı Apify) çekimi + haftalık batch analiz burada çalışır.
+  Günlük ücretsiz kaynaklar için: com.nisavcisi.daily.plist
+  Kurulum:
+    cp com.nisavcisi.weekly.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.nisavcisi.weekly.plist
+  Durdurma:
+    launchctl unload ~/Library/LaunchAgents/com.nisavcisi.weekly.plist
+  NOT: ProgramArguments'taki yolu kendi proje yolunla doğrula.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.nisavcisi.weekly</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/sarp/Desktop/vibe projeler/niş seçimi ve pazar analizi/weekly_run.sh</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/sarp/.local/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>HOME</key>
+        <string>/Users/sarp</string>
+    </dict>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/Users/sarp/Desktop/vibe projeler/niş seçimi ve pazar analizi/data/weekly.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/sarp/Desktop/vibe projeler/niş seçimi ve pazar analizi/data/weekly.err.log</string>
+</dict>
+</plist>

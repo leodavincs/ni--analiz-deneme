@@ -1,0 +1,189 @@
+# =========================================================
+# Niş Avcısı — Yapılandırma
+# =========================================================
+
+# Çıktının yazılacağı Obsidian vault klasörü.
+# Alt klasörler (Dashboard, Nişler, Günlük) burada otomatik oluşturulur.
+obsidian_vault: "/Users/sarp/Documents/Obsidian Vault/Niş Analizi"
+
+# Bir maddenin DB'ye yazılması için gereken minimum şikayet sinyali skoru (0-100).
+# 20: yoğun band (17-24) yakalanır; asıl akıllı filtre Claude analizi olduğu için
+# ön-elemede cömert olmak yalnızca analiz hacmini artırır, Apify parası harcamaz.
+signal_threshold: 20
+
+# Her kaynaktan kaç maddeye kadar çekilsin (rate-limit dostu).
+max_items_per_source: 60
+
+# Analize (Claude/Sonnet) gönderilecek en yüksek sinyalli madde sayısı (maliyet kontrolü).
+analysis_max_items: 120
+
+# --- KAYNAKLAR ---
+sources:
+  reddit:
+    enabled: false   # Apify kullanıyoruz; çift çekme olmasın diye kapalı
+    # OAuth (ÖNERİLEN). Boş bırakılırsa public JSON denenir (ev IP'sinde genelde çalışır,
+    # datacenter/cloud IP'sinde 403 verir). Ücretsiz "script" app: reddit.com/prefs/apps
+    # Buraya yazmak yerine ortam değişkeni de kullanabilirsin: REDDIT_CLIENT_ID / _SECRET
+    client_id: ""
+    client_secret: ""
+    # Şikayet/problem trafiği yüksek subreddit'ler. İstediğin gibi düzenle.
+    subreddits:
+      - Entrepreneur
+      - smallbusiness
+      - SaaS
+      - freelance
+      - sidehustle
+      - startups
+      - webdev
+      - marketing
+      - productivity
+      - selfhosted
+    # Çekilecek listeler ve zaman aralığı.
+    listings: ["top", "hot"]
+    time_filter: "week"   # top için: hour/day/week/month/year/all
+
+  # Reddit'i Apify üzerinden çek (IP engelini aşar; bu ortamdan bile çalışır).
+  # Token: buraya yaz VEYA ortam değişkeni APIFY_TOKEN. Ücretsiz: apify.com
+  # Kullanırken yukarıdaki düz "reddit"i kapatıp bunu açman önerilir (çift çekme olmasın).
+  reddit_apify:
+    enabled: true
+    token: ""                              # APIFY_TOKEN env'inden okunur (önerilen)
+    actor: "practicaltools/apify-reddit-api"   # "Fast Reddit Scraper" — lite'tan çok daha hızlı
+    max_wait: 300                              # bu actor hızlı, 5 dk yeter
+    # Maliyet tavanı: actor $2/1.000 sonuç. ÖNEMLİ: maxItems SUBREDDIT BAŞINA uygulanır
+    # ve actor <=100 zorunlu kılar. 10 subreddit × 60 = 600 sonuç/run ≈ $1.20.
+    # Haftada 1 run → ayda ~$4.80 (<$5 free plan). Bu alan global'i EZER.
+    max_items: 60
+    sort: "top"
+    time_filter: "week"
+    subreddits:
+      - Entrepreneur
+      - smallbusiness
+      - SaaS
+      - freelance
+      - sidehustle
+      - startups
+      - webdev
+      - marketing
+      - productivity
+      - selfhosted
+    # Actor'a özel ek girdi (şema farklıysa buradan ayarla):
+    extra_input: {}
+
+  hackernews:
+    enabled: true
+    # Algolia üzerinden aranacak şikayet kalıpları.
+    queries:
+      - "frustrated with"
+      - "is there a tool"
+      - "wish there was"
+      - "anyone else struggle"
+      - "looking for alternative"
+    min_points: 5
+    days_back: 7
+
+  producthunt:
+    enabled: true        # Tier 2 — best-effort (RSS, token'sız)
+
+  indiehackers:
+    enabled: false       # Tier 2 — kırılgan, varsayılan kapalı (sonra açabilirsin)
+
+# --- ŞİKAYET SİNYALİ KALIPLARI ---
+# extract.py bu kalıpları arar; sinyal skorunu yükseltir.
+complaint_patterns:
+  - "frustrated"
+  - "i hate"
+  - "wish there was"
+  - "is there a tool"
+  - "is there an app"
+  - "anyone else"
+  - "switching from"
+  - "too expensive"
+  - "doesn't work"
+  - "struggle with"
+  - "pain in the"
+  - "workaround"
+  - "fed up"
+  - "annoying"
+  - "no good solution"
+  - "looking for alternative"
+  - "tired of"
+
+# --- 2. KADEME: NİYET / YARDIM KALIPLARI ---
+# Şikayet kadar güçlü değil (tek başına problem garantisi yok) ama problem/talep
+# sinyali taşır. Düşük ağırlık (+6, max 24) → tek bir "how to" eşiği geçirmez,
+# ama birkaçı birleşince veya etkileşimle birlikte geçer. base.INTENT_PATTERNS.
+intent_patterns:
+  - "how do i"
+  - "how to"
+  - "how can i"
+  - "need help"
+  - "need advice"
+  - "any advice"
+  - "any recommendation"
+  - "recommend"
+  - "suggestions"
+  - "struggling"
+  - "can't find"
+  - "cant find"
+  - "is it worth"
+  - "what's the best"
+  - "best way to"
+  - "alternative to"
+  - "help me"
+
+# =========================================================
+# TREND RADARI — RSS kaynakları (teknoloji trend → Türkiye fırsat)
+# Tamamen ÜCRETSİZ. run_trends.py kullanır.
+# =========================================================
+rss:
+  enabled: true
+  # Analize (Claude) gönderilecek en yeni/ilgili öğe sayısı (maliyet kontrolü).
+  trend_analysis_max_items: 80
+  # Her feed'den en fazla kaç öğe okunsun.
+  max_items_per_feed: 25
+
+  # --- KUPON/İNDİRİM/REKLAM GÜRÜLTÜSÜ FİLTRESİ ---
+  # Saf teknoloji içeriği istiyoruz; kupon, promosyon, Prime Day, indirim haberleri
+  # istemiyoruz (özellikle Wired/The Verge "deals" feed'leri bunları basar).
+  # Aşağıdaki regex kalıpları (case-insensitive) BAŞLIK veya URL'de eşleşirse öğe
+  # TAMAMEN atlanır (DB'ye yazılmaz). Kelime-sınırlı; "off switch", "acquisition
+  # deal", "sales data" gibi gerçek haberleri YANLIŞ elemez.
+  exclude_patterns:
+    - "\\bcoupon"                                   # coupon / coupons / coupon code
+    - "\\bpromo code"
+    - "\\d+%\\s*off\\b"                             # "40% Off"
+    - "\\$\\d+\\s*off\\b"                           # "$200 Off"
+    - "\\bprime day\\b"
+    - "\\bblack friday\\b"
+    - "\\bcyber monday\\b"
+    - "\\bbest (early )?deals?\\b"
+    - "\\bdeals? (of the|so far|right now|to shop|you can)"
+    - "\\bdiscount code"
+    - "\\bgift cards?\\b"
+    - "\\bon sale\\b"
+    - "\\bsave (up to )?\\$?\\d"                    # "Save up to $50"
+
+  # Feed listesi — her biri: ad, url, alan(domain). Hepsi canlı test edildi (200 + geçerli RSS/Atom).
+  feeds:
+    - { name: "VentureBeat AI",   domain: "ai",        url: "https://venturebeat.com/category/ai/feed/" }
+    - { name: "The Verge AI",     domain: "ai",        url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml" }
+    - { name: "AI News",          domain: "ai",        url: "https://www.artificialintelligence-news.com/feed/" }
+    - { name: "MIT Tech Review",  domain: "ai",        url: "https://www.technologyreview.com/feed/" }
+    - { name: "TechCrunch",       domain: "startup",   url: "https://techcrunch.com/feed/" }
+    - { name: "Hacker News Best", domain: "startup",   url: "https://hnrss.org/best" }
+    - { name: "Product Hunt",     domain: "consumer",  url: "https://www.producthunt.com/feed" }
+    - { name: "The Verge",        domain: "consumer",  url: "https://www.theverge.com/rss/index.xml" }
+    - { name: "Ars Technica",     domain: "consumer",  url: "https://feeds.arstechnica.com/arstechnica/index" }
+    - { name: "Wired",            domain: "consumer",  url: "https://www.wired.com/feed/rss" }
+    - { name: "Rest of World",    domain: "emerging",  url: "https://restofworld.org/feed/latest/" }
+
+  # Google News RSS — anahtar kelimeyle sınırsız ücretsiz takip. {SORGU} URL'de doldurulur.
+  google_news:
+    template: "https://news.google.com/rss/search?q={SORGU}&hl=en-US&gl=US&ceid=US:en"
+    queries:
+      - { domain: "fintech",  q: "fintech startup" }
+      - { domain: "fintech",  q: "crypto payments" }
+      - { domain: "consumer", q: "no-code tool launch" }
+      - { domain: "consumer", q: "creator economy startup" }
+      - { domain: "ecommerce", q: "ecommerce technology trend" }

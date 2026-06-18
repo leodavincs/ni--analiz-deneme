@@ -1,0 +1,237 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #070809;
+  color: #e6ebf2;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Koyu zemin üstünde hafif radyal parıltı + ince ızgara dokusu */
+.app-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 50% -8%, rgba(61, 245, 160, 0.1), transparent 60%),
+    radial-gradient(40% 40% at 100% 0%, rgba(80, 140, 255, 0.06), transparent 70%);
+  z-index: 0;
+}
+
+.app-bg::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(circle at 50% 30%, black, transparent 85%);
+  z-index: 0;
+}
+
+/* ── Canlı radar amblemi (RadarLogo) ─────────────────────────────── */
+/* Tarama hüzmesi sürekli döner */
+@keyframes radar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.radar-sweep-rot {
+  animation: radar-spin 3.6s linear infinite;
+}
+
+/* Sonar halkaları içeriden dışarı genişleyip söner */
+@keyframes radar-ping {
+  0% {
+    r: 3;
+    opacity: 0.7;
+  }
+  70% {
+    opacity: 0.12;
+  }
+  100% {
+    r: 13;
+    opacity: 0;
+  }
+}
+.radar-ping {
+  animation: radar-ping 3.6s ease-out infinite;
+}
+
+/* Hüzme blip'in üzerinden geçince parlayan hedef (dönüşle senkron) */
+@keyframes radar-blip {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  4% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+  22% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+.radar-blip {
+  transform-origin: 22.5px 10.5px;
+  animation: radar-blip 3.6s ease-out infinite;
+}
+
+/* Merkez çekirdek hafifçe nabız atar */
+@keyframes radar-core {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 1;
+  }
+}
+.radar-core {
+  animation: radar-core 1.8s ease-in-out infinite;
+}
+
+/* Arada bir yanan kırmızı alarm halkası — çoğu zaman görünmez,
+   ~9sn'lik döngüde kısaca iki kez kırmızı çakar (hedef tespiti hissi). */
+@keyframes radar-alert {
+  0%,
+  62%,
+  100% {
+    opacity: 0;
+  }
+  66% {
+    opacity: 0.9;
+  }
+  72% {
+    opacity: 0.15;
+  }
+  78% {
+    opacity: 0.85;
+  }
+  86% {
+    opacity: 0;
+  }
+}
+.radar-alert {
+  opacity: 0;
+  filter: drop-shadow(0 0 2px #ff4d5e);
+  animation: radar-alert 9s ease-in-out infinite;
+}
+
+/* Blip alarm anında yeşilden kırmızıya kayar */
+@keyframes radar-blip-color {
+  0%,
+  60%,
+  100% {
+    fill: #aeffd9;
+  }
+  66%,
+  84% {
+    fill: #ff4d5e;
+  }
+}
+.radar-blip {
+  animation:
+    radar-blip 3.6s ease-out infinite,
+    radar-blip-color 9s ease-in-out infinite;
+}
+
+/* Hareket azaltma tercihi olanlar için sabit görünüm */
+@media (prefers-reduced-motion: reduce) {
+  .radar-sweep-rot,
+  .radar-ping,
+  .radar-blip,
+  .radar-core,
+  .radar-alert {
+    animation: none;
+  }
+}
+
+/* ── Hero küre: etrafında dönen tarama halkası + yatay sweep ─────── */
+@keyframes orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* İnce konik-gradyan halka: küre etrafında dolaşan parlak yay (radar hissi) */
+.orbit-sweep {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 62%,
+    rgba(61, 245, 160, 0.05) 74%,
+    rgba(61, 245, 160, 0.55) 92%,
+    rgba(174, 255, 217, 0.9) 99%,
+    transparent 100%
+  );
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 1.5px),
+    #000 calc(100% - 1.5px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 1.5px),
+    #000 calc(100% - 1.5px)
+  );
+  animation: orbit-spin 7s linear infinite;
+}
+
+/* Üst kenarda soldan sağa kayan ince ışık çizgisi */
+@keyframes hero-scan {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  12%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+.hero-scanline {
+  animation: hero-scan 5.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-sweep,
+  .hero-scanline {
+    animation: none;
+  }
+}
+
+/* İnce, koyu scrollbar */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #1c212b;
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}

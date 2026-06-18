@@ -1,0 +1,10 @@
+# Render Blueprint — repoyu "New > Blueprint" ile bağlayınca paneli otomatik kurar.
+# Docker imajını build edip çalıştırır; Render PORT'u kendi enjekte eder.
+services:
+  - type: web
+    name: nis-avcisi-panel
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free            # boştayken uyur; sürekli açık için "starter" ($7/ay)
+    autoDeployTrigger: commit   # main'e her push'ta otomatik yeniden deploy
+    healthCheckPath: /api/overview

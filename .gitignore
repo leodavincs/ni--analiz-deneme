@@ -1,0 +1,24 @@
+# Gizli anahtarlar — asla commit etme
+.env
+
+# Veri ve loglar
+data/raw/
+data/inbox/
+data/inbox_trends/
+data/*.log
+data/*.err.log
+*.db
+# ...ama paneli besleyen DB deploy ile gitmeli (Render bunu okur):
+!data/signals.db
+
+# Editör / OS çöpü
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Web paneli (üretilen / bağımlılık)
+web/ui/node_modules/
+web/ui/dist/
+data/early_access.jsonl
