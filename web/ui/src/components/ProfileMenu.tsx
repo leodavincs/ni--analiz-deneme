@@ -229,7 +229,7 @@ export function ProfileMenu({
             animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.97 }}
             transition={{ duration: 0.16, ease: "easeOut" }}
-            className="absolute right-0 top-12 z-40 w-72 overflow-hidden rounded-2xl border border-line bg-card shadow-soft outline-none"
+            className="absolute right-0 top-12 z-[300] w-72 overflow-hidden rounded-2xl border border-line bg-card shadow-soft outline-none"
           >
             {/* ── Kimlik başlığı ── */}
             <div className="flex items-center gap-3 border-b border-line/70 bg-white/[0.015] px-4 py-3.5">
