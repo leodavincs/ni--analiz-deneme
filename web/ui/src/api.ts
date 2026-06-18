@@ -1,5 +1,9 @@
 // Tek fetch helper — tüm panel verisi /api/* üzerinden gelir (salt-okunur).
 
+// Pro erken-erişim formu doğrudan Web3Forms'a gider (bkz. earlyAccess).
+// Anahtar client tarafta açıktır; kötüye kullanımda Web3Forms panelinden yenile.
+const WEB3FORMS_KEY = "4f10f545-a0ae-4484-a5cc-9aa5ec2c058f";
+
 export type Overview = {
   signals_total: number;
   trend_items_total: number;
@@ -193,6 +197,26 @@ export const api = {
   },
   collectRss: () =>
     post<{ started: boolean; collector: CollectorState }>("/api/collect/rss"),
-  earlyAccess: (email: string) =>
-    post<{ ok: boolean; error?: string }>("/api/early-access", { email }),
+  // Web3Forms ücretsiz planı yalnızca CLIENT-SIDE çağrıya izin verir (backend 403),
+  // bu yüzden kaydı doğrudan tarayıcıdan Web3Forms'a gönderiyoruz → operatörün
+  // Gmail'ine düşer. access_key client tarafta açık olur (tasarım gereği böyle).
+  earlyAccess: async (
+    email: string,
+  ): Promise<{ ok: boolean; error?: string }> => {
+    const res = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        access_key: WEB3FORMS_KEY,
+        subject: "Niş Avcısı — yeni Pro erken erişim kaydı 🎯",
+        from_name: "Niş Avcısı paneli",
+        email,
+        message: `Pro erken erişim isteyen: ${email}`,
+      }),
+    });
+    const data = await res.json().catch(() => ({ success: false }));
+    return data.success
+      ? { ok: true }
+      : { ok: false, error: data.message || "gönderilemedi" };
+  },
 };

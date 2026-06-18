@@ -8,8 +8,3 @@ services:
     plan: free            # boştayken uyur; sürekli açık için "starter" ($7/ay)
     autoDeployTrigger: commit   # main'e her push'ta otomatik yeniden deploy
     healthCheckPath: /api/overview
-    envVars:
-      # Pro erken-erişim kayıtlarını Gmail'e iletmek için Web3Forms anahtarı.
-      # Değer GİZLİ: render.yaml'a yazma; Render panelinde elle gir (sync: false).
-      - key: WEB3FORMS_KEY
-        sync: false
