@@ -371,10 +371,17 @@ def early_access():
                 "email": email,        # ziyaretçinin adresi → yanıtla'da çıkar
                 "message": f"Pro erken erişim isteyen: {email}",
             }, timeout=10)
-            if not (r.ok and r.json().get("success")):
-                return jsonify({"ok": False, "error": "gönderilemedi"}), 502
-        except Exception:
-            return jsonify({"ok": False, "error": "gönderilemedi"}), 502
+            try:
+                data = r.json()
+            except ValueError:
+                data = {"raw": r.text[:300]}
+            if not (r.ok and data.get("success")):
+                # GEÇİCİ TEŞHİS: Web3Forms'un asıl cevabını döndür.
+                return jsonify({"ok": False, "error": "gönderilemedi",
+                                "status": r.status_code, "upstream": data}), 502
+        except Exception as exc:
+            return jsonify({"ok": False, "error": "gönderilemedi",
+                            "exc": str(exc)}), 502
         return jsonify({"ok": True})
 
     # Anahtar yoksa (yerel geliştirme): dosyaya yaz.
